@@ -4,7 +4,7 @@ import os
 import uuid
 
 from flask_login import current_user
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from authlib.jose import JsonWebSignature as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from golem.core import session, utils, test_directory

@@ -1,4 +1,5 @@
 flask
+authlib
 Flask-Login
 selenium
 pytest

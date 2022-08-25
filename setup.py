@@ -50,6 +50,7 @@ setup(
                       'Flask-login>=0.4.0',
                       'selenium>=3.6.0, <4.0.0a1',
                       'requests>=2.18.4',
+                      'authlib',
                       'py-webdriver-manager',
                       'colorama'
                       ],

@@ -2,8 +2,6 @@ from typing import List
 import time
 
 from selenium.webdriver.remote.webelement import WebElement as RemoteWebElement
-from selenium.webdriver.firefox.webelement import FirefoxWebElement
-from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select as SeleniumSelect
@@ -107,7 +105,7 @@ class ExtendedWebElement:
         """Highlight element"""
         try:
             self.parent.execute_script(HIGHLIGHT_ELEMENT_SCRIPT, self)
-        except Exception as e:
+        except Exception:
             pass
 
     @property
@@ -315,76 +313,67 @@ class ExtendedRemoteWebElement(RemoteWebElement, ExtendedWebElement):
     pass
 
 
-class ExtendedFirefoxWebElement(FirefoxWebElement, ExtendedWebElement):
-    pass
-
-
 def extend_webelement(web_element) -> ExtendedRemoteWebElement:
-    """Extend the selenium WebElement using the
-    ExtendedRemoteWebElement or ExtendedFirefoxWebElement class
-    """
-    if isinstance(web_element.parent, FirefoxDriver):
-        web_element.__class__ = ExtendedFirefoxWebElement
-    else:
-        web_element.__class__ = ExtendedRemoteWebElement
+    """Extend the selenium WebElement using the ExtendedRemoteWebElement"""
+    web_element.__class__ = ExtendedRemoteWebElement
     return web_element
 
 
 HIGHLIGHT_ELEMENT_SCRIPT = """
-	let boundingRect = arguments[0].getBoundingClientRect();
-	boundingRect.left = boundingRect.left + window.scrollX;
-	boundingRect.top = boundingRect.top + window.scrollY;
-	if(isNaN(boundingRect.width)) {
-		boundingRect.width = 0;
-	}
-	if(isNaN(boundingRect.height)) {
-		boundingRect.height = 0;
-	}
-	
-	let borders = {
-		top: document.createElement('div'),
-		left: document.createElement('div'),
-		right: document.createElement('div'),
-		bottom: document.createElement('div'),
-	}
+    let boundingRect = arguments[0].getBoundingClientRect();
+    boundingRect.left = boundingRect.left + window.scrollX;
+    boundingRect.top = boundingRect.top + window.scrollY;
+    if(isNaN(boundingRect.width)) {
+        boundingRect.width = 0;
+    }
+    if(isNaN(boundingRect.height)) {
+        boundingRect.height = 0;
+    }
+    let borders = {
+        top: document.createElement('div'),
+        left: document.createElement('div'),
+        right: document.createElement('div'),
+        bottom: document.createElement('div'),
+    }
 
-	Object.keys(borders).forEach(border => {
-		borders[border].style.position = 'absolute';
-		borders[border].style.backgroundColor = 'yellow';
-	});
+    Object.keys(borders).forEach(border => {
+        borders[border].style.position = 'absolute';
+        borders[border].style.backgroundColor = 'yellow';
+    });
 
-	borders.top.style.left = boundingRect.left - 5 + 'px';
-	borders.top.style.top = boundingRect.top - 5 + 'px';
-	borders.top.style.width = boundingRect.width + 10 + 'px';
-	borders.top.style.height = '4px';
+    borders.top.style.left = boundingRect.left - 5 + 'px';
+    borders.top.style.top = boundingRect.top - 5 + 'px';
+    borders.top.style.width = boundingRect.width + 10 + 'px';
+    borders.top.style.height = '4px';
 
-	borders.left.style.left = boundingRect.left - 5 + 'px';
-	borders.left.style.top = boundingRect.top - 5 + 'px';
-	borders.left.style.height = boundingRect.height + 10 + 'px';
-	borders.left.style.width = '4px';
+    borders.left.style.left = boundingRect.left - 5 + 'px';
+    borders.left.style.top = boundingRect.top - 5 + 'px';
+    borders.left.style.height = boundingRect.height + 10 + 'px';
+    borders.left.style.width = '4px';
 
-	borders.right.style.left = boundingRect.left + boundingRect.width + 1 + 'px';
-	borders.right.style.top = boundingRect.top - 5 + 'px';
-	borders.right.style.height = boundingRect.height + 10 + 'px';
-	borders.right.style.width = '4px';
+    borders.right.style.left = boundingRect.left + boundingRect.width + 1 + 'px';
+    borders.right.style.top = boundingRect.top - 5 + 'px';
+    borders.right.style.height = boundingRect.height + 10 + 'px';
+    borders.right.style.width = '4px';
 
-	borders.bottom.style.left = boundingRect.left - 5 + 'px';
-	borders.bottom.style.top = boundingRect.top + boundingRect.height + 1 + 'px';
-	borders.bottom.style.width = boundingRect.width + 10 + 'px';
-	borders.bottom.style.height = '4px';
+    borders.bottom.style.left = boundingRect.left - 5 + 'px';
+    borders.bottom.style.top = boundingRect.top + boundingRect.height + 1 + 'px';
+    borders.bottom.style.width = boundingRect.width + 10 + 'px';
+    borders.bottom.style.height = '4px';
 
-	let zIndex = parseInt(arguments[0].style.zIndex);
-	if(!Number.isNaN(zIndex)) {
-		Object.keys(borders).forEach(border => borders[border].style.zIndex = zIndex + 1);
-	}
-	Object.keys(borders).forEach(border => document.body.appendChild(borders[border]));
-	
-	setTimeout(() => {
-		Object.keys(borders).forEach(border => borders[border].style.backgroundColor = 'transparent');
-	}, 300);
-	setTimeout(() => {
-		Object.keys(borders).forEach(border => borders[border].style.backgroundColor = 'yellow');
-	}, 600);
-	setTimeout(() => {
-		Object.keys(borders).forEach(border => borders[border].remove());
-	}, 900);"""
+    let zIndex = parseInt(arguments[0].style.zIndex);
+    if(!Number.isNaN(zIndex)) {
+        Object.keys(borders).forEach(border => borders[border].style.zIndex = zIndex + 1);
+    }
+    Object.keys(borders).forEach(border => document.body.appendChild(borders[border]));
+    setTimeout(() => {
+        Object.keys(borders).forEach(
+            border => borders[border].style.backgroundColor = 'transparent'
+        );
+    }, 300);
+    setTimeout(() => {
+        Object.keys(borders).forEach(border => borders[border].style.backgroundColor = 'yellow');
+    }, 600);
+    setTimeout(() => {
+        Object.keys(borders).forEach(border => borders[border].remove());
+    }, 900);"""

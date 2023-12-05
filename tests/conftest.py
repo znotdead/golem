@@ -169,11 +169,11 @@ def project_function_clean(testdir_function):
 
 
 @pytest.fixture(scope="session")
-def test_utils():    
+def test_utils():
     yield TestUtils
 
 
-# TEST UTILS   
+# TEST UTILS
 
 class TestUtils:
 
@@ -252,7 +252,7 @@ class TestUtils:
 
     @staticmethod
     def create_skip_test(project, name):
-        content = ('skip = True\n' 
+        content = ('skip = True\n'
                    'def test(data):\n'
                    '    print("hello")\n')
         return TestUtils.create_test(project, name, content)

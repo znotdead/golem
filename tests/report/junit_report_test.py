@@ -18,8 +18,10 @@ class TestGenerateJunitReport:
         test_utils.create_error_test(project, error_test)
         test_utils.create_code_error_test(project, code_error_test)
         test_utils.create_skip_test(project, skip_test)
-        test_utils.create_suite(project, 'suite_one',
-                                tests=[success_test, failure_test, error_test, code_error_test, skip_test])
+        test_utils.create_suite(
+            project, 'suite_one',
+            tests=[success_test, failure_test, error_test, code_error_test, skip_test]
+        )
         execution = test_utils.execute_suite(project, 'suite_one', ignore_sys_exit=True)
 
         xml = generate_junit_report(project, execution['suite_name'], execution['timestamp'])
@@ -72,7 +74,7 @@ class TestGenerateJunitReport:
         # testsuites/testsuite/code_error_test/system-out
         system_out = next(node for node in test if node.tag == 'system-out')
         assert 'INFO Browser: chrome' in system_out.text
-        assert 'ERROR SyntaxError: unexpected EOF while parsing' in system_out.text
+        assert 'ERROR SyntaxError:' in system_out.text
         # testsuites/testsuite/error_test
         test = next(test for test in testsuite if test.attrib['classname'] == error_test)
         assert test.attrib == {

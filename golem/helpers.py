@@ -2,7 +2,7 @@ import random
 import string
 
 
-def random_float(min=1.0, max=100.0, decimals=None):
+def random_float(min=1.0, max=100.0, decimals=None) -> float:
     """Generate a random float between min and max.
 
     `decimals` is the maximum amount of decimal places
@@ -14,12 +14,12 @@ def random_float(min=1.0, max=100.0, decimals=None):
     return randomfloat
 
 
-def random_int(min=1, max=100):
+def random_int(min=1, max=100) -> int:
     """Generate a random integer between min and max"""
     return random.randint(min, max)
 
 
-def random_str(length=10, sample=None, prefix='', suffix=''):
+def random_str(length=10, sample=None, prefix='', suffix='') -> str:
     """Generate a random string
 
     Sample should be a string or a list of strings/characters to

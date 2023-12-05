@@ -1,6 +1,7 @@
 import time
 
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.common.by import By
 
 from golem import execution
 from golem.core.exceptions import (IncorrectSelectorType,
@@ -13,29 +14,32 @@ def _find_webelement(root, selector_type, selector_value, element_name,
                      timeout=0, wait_displayed=False, highlight=False):
     """Finds a web element."""
     webelement = None
-    remaining_time = lambda: timeout - (time.time() - start_time)
+
+    def remaining_time():
+        return timeout - (time.time() - start_time)
+
     start_time = time.time()
     while webelement is None:
         try:
             if selector_type == 'id':
-                webelement = root.find_element_by_id(selector_value)
+                webelement = root.find_element(By.ID, selector_value)
             elif selector_type == 'css':
-                webelement = root.find_element_by_css_selector(selector_value)
+                webelement = root.find_element(By.CSS_SELECTOR, selector_value)
             elif selector_type == 'link_text':
-                webelement = root.find_element_by_link_text(selector_value)
+                webelement = root.find_element(By.LINK_TEXT, selector_value)
             elif selector_type == 'partial_link_text':
-                webelement = root.find_element_by_partial_link_text(selector_value)
+                webelement = root.find_element(By.PARTIAL_LINK_TEXT, selector_value)
             elif selector_type == 'name':
-                webelement = root.find_element_by_name(selector_value)
+                webelement = root.find_element(By.NAME, selector_value)
             elif selector_type == 'xpath':
-                webelement = root.find_element_by_xpath(selector_value)
+                webelement = root.find_element(By.XPATH, selector_value)
             elif selector_type == 'tag_name':
-                webelement = root.find_element_by_tag_name(selector_value)
+                webelement = root.find_element(By.TAG_NAME, selector_value)
             else:
                 msg = f'Selector {selector_type} is not a valid option'
                 raise IncorrectSelectorType(msg)
             execution.logger.debug('Element found')
-        except:
+        except Exception:
             if remaining_time() <= 0:
                 break
             else:
@@ -124,7 +128,7 @@ def _find(self, element=None, id=None, name=None, link_text=None, partial_link_t
         selector_value = element_name = tag_name
     else:
         raise IncorrectSelectorType('Selector is not a valid option')
-    
+
     if not webelement:
         webelement = _find_webelement(self, selector_type, selector_value, element_name,
                                       timeout, wait_displayed, highlight)
@@ -183,37 +187,37 @@ def _find_all(self, element=None, id=None, name=None, link_text=None,
         selector_type = 'id'
         selector_value = id
         element_name = tuple_element_name or id
-        webelements = self.find_elements_by_id(id)
+        webelements = self.find_elements(By.ID, id)
     elif css:
         selector_type = 'css'
         selector_value = css
         element_name = tuple_element_name or css
-        webelements = self.find_elements_by_css_selector(css)
+        webelements = self.find_elements(By.CSS_SELECTOR, css)
     elif link_text:
         selector_type = 'link_text'
         selector_value = link_text
         element_name = tuple_element_name or link_text
-        webelements = self.find_elements_by_link_text(link_text)
+        webelements = self.find_elements(By.LINK_TEXT, link_text)
     elif partial_link_text:
         selector_type = 'partial_link_text'
         selector_value = partial_link_text
         element_name = tuple_element_name or partial_link_text
-        webelements = self.find_elements_by_partial_link_text(partial_link_text)
+        webelements = self.find_elements(By.PARTIAL_LINK_TEXT, partial_link_text)
     elif name:
         selector_type = 'name'
         selector_value = name
         element_name = tuple_element_name or name
-        webelements = self.find_elements_by_name(name)
+        webelements = self.find_elements(By.NAME, name)
     elif xpath:
         selector_type = 'xpath'
         selector_value = xpath
         element_name = tuple_element_name or xpath
-        webelements = self.find_elements_by_xpath(xpath)
+        webelements = self.find_elements(By.XPATH, xpath)
     elif tag_name:
         selector_type = 'tag_name'
         selector_value = element_name = tag_name
         element_name = tuple_element_name or tag_name
-        webelements = self.find_elements_by_tag_name(tag_name)
+        webelements = self.find_elements(By.TAG_NAME, tag_name)
     else:
         raise IncorrectSelectorType('Incorrect selector provided')
 

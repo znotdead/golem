@@ -2,7 +2,6 @@ from selenium.webdriver import Chrome as SeleniumChromeDriver
 from selenium.webdriver import Edge as SeleniumEdgeDriver
 from selenium.webdriver import Firefox as SeleniumGeckoDriver
 from selenium.webdriver import Ie as SeleniumIeDriver
-from selenium.webdriver import Opera as SeleniumOperaDriver
 from selenium.webdriver import Remote as SeleniumRemoteDriver
 
 from golem.webdriver.extended_driver import GolemExtendedDriver
@@ -21,10 +20,6 @@ class GolemGeckoDriver(SeleniumGeckoDriver, GolemExtendedDriver):
 
 
 class GolemIeDriver(SeleniumIeDriver, GolemExtendedDriver):
-    pass
-
-
-class GolemOperaDriver(SeleniumOperaDriver, GolemExtendedDriver):
     pass
 
 

@@ -8,12 +8,14 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from golem.core import utils
 from golem.core.project import Project
 from golem import execution
-from golem.webdriver import (GolemChromeDriver,
-                             GolemEdgeDriver,
-                             GolemGeckoDriver,
-                             GolemIeDriver,
-                             GolemOperaDriver,
-                             GolemRemoteDriver)
+from selenium.webdriver.chrome.service import Service as ChromeService
+from golem.webdriver import (
+    GolemChromeDriver,
+    GolemEdgeDriver,
+    GolemGeckoDriver,
+    GolemIeDriver,
+    GolemRemoteDriver,
+)
 
 
 class InvalidBrowserIdError(Exception):
@@ -76,9 +78,13 @@ def open_browser(browser_name=None, capabilities=None, remote_url=None, browser_
             if matched_executable_path:
                 try:
                     yield matched_executable_path
-                except:
-                    msg = f"Could not start {browser_name} driver using the path '{executable_path}'\n" \
-                          f"verify that the {exec_path_setting} setting points to a valid webdriver executable."
+                except Exception:
+                    msg = (
+                        f"Could not start {browser_name} driver using ",
+                        f"the path '{executable_path}'\n",
+                        f"verify that the {exec_path_setting} setting points ",
+                        "to a valid webdriver executable.",
+                    )
                     execution.logger.error(msg)
                     execution.logger.info(traceback.format_exc())
                     raise Exception(msg)
@@ -130,16 +136,16 @@ def open_browser(browser_name=None, capabilities=None, remote_url=None, browser_
             chrome_options = webdriver.ChromeOptions()
             if settings['start_maximized']:
                 chrome_options.add_argument('start-maximized')
-            driver = GolemChromeDriver(executable_path=ex_path,
-                                       chrome_options=chrome_options)
+            service = ChromeService(executable_path=ex_path)
+            driver = GolemChromeDriver(service=service, options=chrome_options)
     # Chrome headless
     elif browser_name == 'chrome-headless':
         with validate_exec_path('chrome', 'chromedriver_path', settings) as ex_path:
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_argument('headless')
             chrome_options.add_argument('--window-size=1600,1600')
-            driver = GolemChromeDriver(executable_path=ex_path,
-                                       chrome_options=chrome_options)
+            service = ChromeService(executable_path=ex_path)
+            driver = GolemChromeDriver(service=service, options=chrome_options)
     # Chrome remote
     elif browser_name == 'chrome-remote':
         with validate_remote_url(remote_url) as remote_url:
@@ -194,13 +200,6 @@ def open_browser(browser_name=None, capabilities=None, remote_url=None, browser_
         with validate_remote_url(remote_url) as remote_url:
             driver = GolemRemoteDriver(command_executor=remote_url,
                                        desired_capabilities=DesiredCapabilities.INTERNETEXPLORER)
-    # Opera
-    elif browser_name == 'opera':
-        with validate_exec_path('opera', 'operadriver_path', settings) as ex_path:
-            opera_options = webdriver.ChromeOptions()
-            if 'opera_binary_path' in settings:
-                opera_options.binary_location = settings['opera_binary_path']
-            driver = GolemOperaDriver(executable_path=ex_path, options=opera_options)
     # Opera remote
     elif browser_name == 'opera-remote':
         with validate_remote_url(remote_url) as remote_url:
@@ -215,7 +214,8 @@ def open_browser(browser_name=None, capabilities=None, remote_url=None, browser_
         raise Exception(f"Error: {browser_definition['name']} is not a valid driver")
 
     if settings['start_maximized'] and not is_custom:
-        # currently there is no way to maximize chrome window on OSX (chromedriver 2.43), adding workaround
+        # currently there is no way to maximize chrome window on OSX (chromedriver 2.43),
+        # adding workaround
         # https://bugs.chromium.org/p/chromedriver/issues/detail?id=2389
         # https://bugs.chromium.org/p/chromedriver/issues/detail?id=2522
         # TODO: assess if this work-around is still needed when chromedriver 2.44 is released

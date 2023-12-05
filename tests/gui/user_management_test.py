@@ -124,10 +124,10 @@ class TestUsers:
         Users.create_user(username, password)
         app = create_app()
         user = Users.get_user_by_username(username)
-        token = user.generate_auth_token(app.secret_key, expiration=1)
+        token = user.generate_auth_token(app.secret_key)
         time.sleep(2)
         with pytest.raises(SignatureExpired):
-            Users.verify_auth_token(app.secret_key, token)
+            Users.verify_auth_token(app.secret_key, token, expiration=1)
 
     @pytest.mark.slow
     def test_verify_password(self, testdir_class, test_utils):

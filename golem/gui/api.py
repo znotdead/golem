@@ -59,7 +59,7 @@ def auth_token():
     elif not user.verify_password(password):
         abort(401, 'Incorrect password')
     else:
-        token = user.generate_auth_token(current_app.secret_key, expiration=3600)
+        token = user.generate_auth_token(current_app.secret_key)
         return jsonify(token.decode())
 
 
@@ -449,7 +449,9 @@ def report_execution():
     execution = request.args['execution']
     timestamp = request.args['timestamp']
     _verify_permissions(Permissions.REPORTS_ONLY, project)
-    execution_data = exec_report.get_execution_data(project=project, execution=execution, timestamp=timestamp)
+    execution_data = exec_report.get_execution_data(
+        project=project, execution=execution, timestamp=timestamp
+    )
     response = jsonify(execution_data)
     if execution_data['has_finished']:
         response.cache_control.max_age = 60 * 60 * 24 * 7
@@ -491,14 +493,18 @@ def report_get_reports():
     else:
         _verify_permissions(Permissions.REPORTS_ONLY, project)
         project_list = [project]
-    last_timestamps = report.get_last_execution_timestamps(project_list, execution=execution, last_days=last_days)
+    last_timestamps = report.get_last_execution_timestamps(
+        project_list, execution=execution, last_days=last_days
+    )
 
     result = []
 
     for proj, executions in last_timestamps.items():
         for exec_, timestamps in executions.items():
             for timestamp in timestamps:
-                execution_data = exec_report.get_execution_data(project=proj, execution=exec_, timestamp=timestamp)
+                execution_data = exec_report.get_execution_data(
+                    project=proj, execution=exec_, timestamp=timestamp
+                )
                 result.append({
                     'project': proj,
                     'execution': exec_,
@@ -567,7 +573,9 @@ def report_test_status():
     test_name = request.args['test']
     timestamp = request.args['timestamp']
     _verify_permissions(Permissions.REPORTS_ONLY, project)
-    status = exec_report.test_file_execution_result_all_sets(project, test_name, timestamp, test_name)
+    status = exec_report.test_file_execution_result_all_sets(
+        project, test_name, timestamp, test_name
+    )
     return jsonify(status)
 
 
@@ -770,7 +778,9 @@ def test_run():
     environments = request.json['environments']
     processes = request.json['processes']
     _verify_permissions(Permissions.STANDARD, project)
-    timestamp = gui_utils.run_test(project, test_file_name, test_functions, browsers, environments, processes)
+    timestamp = gui_utils.run_test(
+        project, test_file_name, test_functions, browsers, environments, processes
+    )
     return jsonify(timestamp)
 
 

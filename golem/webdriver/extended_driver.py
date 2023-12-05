@@ -252,11 +252,11 @@ class GolemExtendedDriver:
         If current window is the first in the list this will circle
         back from the top.
         """
-        previous_index = self.get_window_index() -1
+        previous_index = self.get_window_index() - 1
         if previous_index >= 0:
             self.switch_to_window_by_index(previous_index)
         else:
-            self.switch_to_window_by_index(len(self.window_handles) -1)
+            self.switch_to_window_by_index(len(self.window_handles) - 1)
 
     def switch_to_window_by_index(self, index):
         """Switch to window/tab by index.

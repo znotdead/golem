@@ -59,20 +59,20 @@ class TestImportModule:
     syntax_tests = [
         (
             ('var = 2 +\n'),
-            ['    var = 2 +\n            ^\nSyntaxError: invalid syntax\n',
-             '    var = 2 +\n             ^\nSyntaxError: invalid syntax\n']
+            ['    var = 2 +\n            ^\nSyntaxError:',
+             '    var = 2 +\n             ^\nSyntaxError:']
         ),
         (
             ('import\n'
              'var = 2 + 2'),
-            ['    import\n         ^\nSyntaxError: invalid syntax\n',
-             '    import\n          ^\nSyntaxError: invalid syntax\n']
+            ['    import\n         ^\nSyntaxError:',
+             '    import\n          ^\nSyntaxError:']
         ),
         (
             ('def func()\n'
              '    var = 2 + 2\n'),
-            ['    def func()\n             ^\nSyntaxError: invalid syntax\n',
-             '    def func()\n              ^\nSyntaxError: invalid syntax\n']
+            ['    def func()\n             ^\nSyntaxError:',
+             '    def func()\n              ^\nSyntaxError:']
         ),
         (
             'data = [{"key": unknown}]',

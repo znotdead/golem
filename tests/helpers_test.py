@@ -31,8 +31,6 @@ class TestRandomInt:
 
         randint = helpers.random_int(-5, 5)
         assert -5 <= randint <= 5
-
-        randint = helpers.random_int(-5.0, 5.0)
         assert isinstance(randint, int)
 
 

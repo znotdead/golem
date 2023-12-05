@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 from types import SimpleNamespace
 
 import pytest
@@ -93,10 +92,9 @@ step('this step wont be run')
         assert r[0].message == f'Test execution started: {runfix.test_name}'
         assert r[1].message == 'Browser: chrome'
         assert r[2].levelname == 'ERROR'
-        error_contains = 'def test(data)\n                 ^\nSyntaxError: invalid syntax'
-        error_contains_ver2 = 'def test(data)\n                  ^\nSyntaxError: invalid syntax'
-        # TODO: diff between py 3.9 and py < 3.9
-        assert error_contains in r[2].message or error_contains_ver2 in r[2].message
+        error_contains = 'def test(data)'
+        error_contains_ver2 = "SyntaxError: expected ':'"
+        assert error_contains in r[2].message and error_contains_ver2 in r[2].message
         report = runfix.read_report()
         assert len(report) == 1
         report = report[0]
@@ -111,8 +109,11 @@ step('this step wont be run')
         assert report['test_data'] == {}
         assert report['steps'] == []
         assert len(report['errors']) == 1
-        assert report['errors'][0]['message'] == 'SyntaxError: invalid syntax'
-        assert error_contains in report['errors'][0]['description'] or error_contains_ver2 in report['errors'][0]['description']
+        assert report['errors'][0]['message'] == "SyntaxError: expected ':'"
+        assert (
+            error_contains in report['errors'][0]['description']
+            and error_contains_ver2 in report['errors'][0]['description']
+        )
         assert report['result'] == ResultsEnum.CODE_ERROR
         assert report['set_name'] == ''
         assert report['steps'] == []
@@ -140,11 +141,9 @@ def after_Test(data):
         assert r[0].message == f'Test execution started: {runfix.test_name}'
         assert r[1].message == 'Browser: chrome'
         assert r[2].levelname == 'ERROR'
-        error_contains_one = "element2 = ('css', '.oh.no')\n           ^\n" \
-                             "SyntaxError: invalid syntax"
-        error_contains_two = "element2 = ('css', '.oh.no')\n    ^\n" \
-                             "SyntaxError: invalid syntax"  # Python 3.8 version
-        assert error_contains_one in r[2].message or \
+        error_contains_one = "SyntaxError: \'(\' was never closed\n"
+        error_contains_two = "element1 = (\'id\', \'someId\'\n"
+        assert error_contains_one in r[2].message and \
                error_contains_two in r[2].message
         r = runfix.read_report()
         assert len(r) == 1
@@ -155,8 +154,8 @@ def after_Test(data):
         assert r['description'] == ''  # description could not be read
         assert r['environment'] == ''
         assert len(r['errors']) == 1
-        assert 'SyntaxError: invalid syntax' in r['errors'][0]['message']
-        assert error_contains_one in r['errors'][0]['description'] or \
+        assert "SyntaxError: \'(\' was never closed\n" in r['errors'][0]['message']
+        assert error_contains_one in r['errors'][0]['description'] and \
                error_contains_two in r['errors'][0]['description']
         assert r['result'] == ResultsEnum.CODE_ERROR
         assert r['set_name'] == ''
@@ -365,7 +364,7 @@ def after_test(data):
         """Test runs successfully with test data"""
         code = """
 description = 'some description'
-    
+
 def before_test(data):
     step('before_test step')
 
@@ -1228,6 +1227,7 @@ class TestTestRunnerSetExecutionModuleValues:
         timestamp = utils.get_timestamp()
         executiondir = _mock_report_directory(project, test_file, timestamp)
         testfile_reportdir = test_report.test_file_report_dir(test_file, execdir=executiondir)
+        assert testfile_reportdir
         settings = settings_manager.get_project_settings(project)
         browser = _define_browsers_mock(['chrome'])[0]
         test_data = {}

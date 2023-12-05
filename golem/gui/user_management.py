@@ -4,7 +4,7 @@ import os
 import uuid
 
 from flask_login import current_user
-from authlib.jose import JsonWebSignature as Serializer
+from itsdangerous import TimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from golem.core import session, utils, test_directory
@@ -143,7 +143,7 @@ class Users:
         return None
 
     @staticmethod
-    def verify_auth_token(secret_key, token):
+    def verify_auth_token(secret_key, token, expiration=3600):
         """Verify token is valid.
 
         :Returns:
@@ -154,7 +154,7 @@ class Users:
          - itsdangerous.SignatureExpired: token has expired
         """
         s = Serializer(secret_key)
-        data = s.loads(token)
+        data = s.loads(token, max_age=expiration)
         return Users.get_user_by_id(data['id'])
 
     @staticmethod
@@ -300,8 +300,8 @@ class User:
                 return Permissions.get_weight(permission)
         return 0
 
-    def generate_auth_token(self, secret_key, expiration=600):
-        s = Serializer(secret_key, expires_in=expiration)
+    def generate_auth_token(self, secret_key):
+        s = Serializer(secret_key)
         return s.dumps({'id': self.id})
 
     def __repr__(self):

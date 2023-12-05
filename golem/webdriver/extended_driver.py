@@ -4,13 +4,12 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
 
-from golem.webdriver import common
-from golem.webdriver.extended_webelement import ExtendedRemoteWebElement
+from golem.webdriver.extended_webelement import ExtendedRemoteWebElement, Finder
 from golem.webdriver import golem_expected_conditions as gec
 from golem.core.exceptions import ElementNotFound, ElementNotDisplayed
 
 
-class GolemExtendedDriver:
+class GolemExtendedDriver(Finder):
 
     def accept_alert(self, ignore_not_present=False):
         """Accepts alert.
@@ -174,8 +173,10 @@ class GolemExtendedDriver:
         :Returns:
           a golem.webdriver.extended_webelement.ExtendedRemoteWebElement
         """
-        return common._find(self, element, id, name, link_text, partial_link_text, css,
-                            xpath, tag_name, timeout, wait_displayed, highlight)
+        return self._find(
+            element, id, name, link_text, partial_link_text, css,
+            xpath, tag_name, timeout, wait_displayed, highlight
+        )
 
     def find_all(self, element=None, id=None, name=None, link_text=None,
                  partial_link_text=None, css=None, xpath=None,
@@ -197,8 +198,9 @@ class GolemExtendedDriver:
         :Returns:
             a list of ExtendedRemoteWebElement
         """
-        return common._find_all(self, element, id, name, link_text, partial_link_text,
-                                css, xpath, tag_name)
+        return self._find_all(
+            self, element, id, name, link_text, partial_link_text, css, xpath, tag_name
+        )
 
     def get_window_index(self):
         """Get the index of the current window/tab"""

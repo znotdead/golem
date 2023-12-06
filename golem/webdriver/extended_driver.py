@@ -1,16 +1,13 @@
-from typing import List
-
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
 
-from golem.webdriver import common
-from golem.webdriver.extended_webelement import ExtendedRemoteWebElement
+from golem.webdriver.extended_webelement import Finder
 from golem.webdriver import golem_expected_conditions as gec
 from golem.core.exceptions import ElementNotFound, ElementNotDisplayed
 
 
-class GolemExtendedDriver:
+class GolemExtendedDriver(Finder):
 
     def accept_alert(self, ignore_not_present=False):
         """Accepts alert.
@@ -146,59 +143,6 @@ class GolemExtendedDriver:
     #     source_element = self.find(element)
     #     target_element = self.find(target)
     #     actionChains.drag_and_drop(source_element, target_element).perform()
-
-    def find(self, element=None, id=None, name=None, link_text=None,
-             partial_link_text=None, css=None, xpath=None, tag_name=None,
-             timeout=None, wait_displayed=None, highlight=None) -> ExtendedRemoteWebElement:
-        """Find a WebElement
-
-        Search criteria:
-        The first argument must be: an element tuple, a CSS string,
-        an XPath string, or a WebElement object.
-        Keyword search criteria: id, name, link_text, partial_link_text,
-        css, xpath, tag_name.
-        Only one search criteria should be provided.
-
-        Other args:
-        - timeout: timeout (in seconds) to wait for element to be present.
-                   by default it uses the *search_timeout* setting value
-        - wait_displayed: wait for element to be displayed (visible).
-                          by default uses the *wait_displayed* setting value
-
-        :Usage:
-            driver.find('div#someId > input.class')
-            driver.find(('id', 'someId'))
-            driver.find(id='someId')
-            driver.find(xpath='//div/input', timeout=5, wait_displayed=True)
-
-        :Returns:
-          a golem.webdriver.extended_webelement.ExtendedRemoteWebElement
-        """
-        return common._find(self, element, id, name, link_text, partial_link_text, css,
-                            xpath, tag_name, timeout, wait_displayed, highlight)
-
-    def find_all(self, element=None, id=None, name=None, link_text=None,
-                 partial_link_text=None, css=None, xpath=None,
-                 tag_name=None) -> List[ExtendedRemoteWebElement]:
-        """Find all WebElements that match the search criteria.
-
-        Search criteria:
-        The first argument must be: an element tuple, a CSS string, or
-        an XPath string.
-        Keyword search criteria: id, name, link_text, partial_link_text,
-        css, xpath, tag_name.
-        Only one search criteria should be provided.
-
-        :Usage:
-            driver.find_all('div#someId > span.class')
-            driver.find(('tag_name', 'input'))
-            driver.find(xpath='//div/input')
-
-        :Returns:
-            a list of ExtendedRemoteWebElement
-        """
-        return common._find_all(self, element, id, name, link_text, partial_link_text,
-                                css, xpath, tag_name)
 
     def get_window_index(self):
         """Get the index of the current window/tab"""

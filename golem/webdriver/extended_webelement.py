@@ -17,13 +17,79 @@ from golem.core.exceptions import (IncorrectSelectorType,
 
 
 class Finder:
+    def find(self, element=None, id=None, name=None, link_text=None,
+             partial_link_text=None, css=None, xpath=None, tag_name=None,
+             timeout=None, wait_displayed=None, highlight=None) -> 'ExtendedRemoteWebElement':
+        """Find a WebElement
+
+        Search criteria:
+        The first argument must be: an element tuple, a CSS string,
+        an XPath string, or a WebElement object.
+        Keyword search criteria: id, name, link_text, partial_link_text,
+        css, xpath, tag_name.
+        Only one search criteria should be provided.
+
+        Other args:
+        - timeout: timeout (in seconds) to wait for element to be present.
+                   by default it uses the *search_timeout* setting value
+        - wait_displayed: wait for element to be displayed (visible).
+                          by default uses the *wait_displayed* setting value
+
+        :Usage:
+            element.find('div#someId > input.class')
+            element.find(('id', 'someId'))
+            element.find(id='someId')
+            element.find(xpath='//div/input', timeout=5, wait_displayed=True)
+
+        :Usage:
+            driver.find('div#someId > input.class')
+            driver.find(('id', 'someId'))
+            driver.find(id='someId')
+            driver.find(xpath='//div/input', timeout=5, wait_displayed=True)
+
+        :Returns:
+          a golem.webdriver.extended_webelement.ExtendedRemoteWebElement
+        """
+        return self._find(
+            element, id, name, link_text, partial_link_text,
+            css, xpath, tag_name, timeout, wait_displayed, highlight
+        )
+
+    def find_all(self, element=None, id=None, name=None, link_text=None,
+                 partial_link_text=None, css=None, xpath=None,
+                 tag_name=None) -> List['ExtendedRemoteWebElement']:
+        """Find all WebElements that match the search criteria.
+
+        Search criteria:
+        The first argument must be: an element tuple, a CSS string, or
+        an XPath string.
+        Keyword search criteria: id, name, link_text, partial_link_text,
+        css, xpath, tag_name.
+        Only one search criteria should be provided.
+
+        :Usage:
+            element.find_all('div#someId > span.class')
+            element.find_all(('tag_name', 'input'))
+            element.find_all(xpath='//div/input')
+
+        :Usage:
+            driver.find_all('div#someId > span.class')
+            driver.find_all(('tag_name', 'input'))
+            driver.find_all(xpath='//div/input')
+
+        :Returns:
+            a list of ExtendedRemoteWebElement
+        """
+        return self._find_all(
+            element, id, name, link_text, partial_link_text, css, xpath, tag_name
+        )
+
     def _find_webelement(
         self, selector_type, selector_value, element_name,
         timeout=0, wait_displayed=False, highlight=False
     ):
         """Finds a web element."""
         webelement = None
-        root = self
 
         def remaining_time():
             return timeout - (time.time() - start_time)
@@ -31,24 +97,7 @@ class Finder:
         start_time = time.time()
         while webelement is None:
             try:
-                if selector_type == 'id':
-                    webelement = root.find_element(By.ID, selector_value)
-                elif selector_type == 'css':
-                    webelement = root.find_element(By.CSS_SELECTOR, selector_value)
-                elif selector_type == 'link_text':
-                    webelement = root.find_element(By.LINK_TEXT, selector_value)
-                elif selector_type == 'partial_link_text':
-                    webelement = root.find_element(By.PARTIAL_LINK_TEXT, selector_value)
-                elif selector_type == 'name':
-                    webelement = root.find_element(By.NAME, selector_value)
-                elif selector_type == 'xpath':
-                    webelement = root.find_element(By.XPATH, selector_value)
-                elif selector_type == 'tag_name':
-                    webelement = root.find_element(By.TAG_NAME, selector_value)
-                else:
-                    msg = f'Selector {selector_type} is not a valid option'
-                    raise IncorrectSelectorType(msg)
-                execution.logger.debug('Element found')
+                webelement = self._get_element(selector_type, selector_value)
             except Exception:
                 if remaining_time() <= 0:
                     break
@@ -76,36 +125,36 @@ class Finder:
                     raise ElementNotDisplayed(msg)
             return webelement
 
-    def _find(
+    def _get_element(self, selector_type, selector_value, many=False):
+        func = self.find_elements if many else self.find_element
+        if selector_type == 'id':
+            return func(By.ID, selector_value)
+        elif selector_type == 'css':
+            return func(By.CSS_SELECTOR, selector_value)
+        elif selector_type == 'link_text':
+            return func(By.LINK_TEXT, selector_value)
+        elif selector_type == 'partial_link_text':
+            return func(By.PARTIAL_LINK_TEXT, selector_value)
+        elif selector_type == 'name':
+            return func(By.NAME, selector_value)
+        elif selector_type == 'xpath':
+            return func(By.XPATH, selector_value)
+        elif selector_type == 'tag_name':
+            return func(By.TAG_NAME, selector_value)
+        else:
+            msg = f'Selector {selector_type} is not a valid option'
+            raise IncorrectSelectorType(msg)
+        execution.logger.debug('Element found')
+
+    def _get_selector_data(
         self, element=None, id=None, name=None, link_text=None, partial_link_text=None,
-        css=None, xpath=None, tag_name=None, timeout=None, wait_displayed=None, highlight=None
+        css=None, xpath=None, tag_name=None
     ):
-        """Find a webelement.
-
-        `element` can be:
-        a web element
-        a tuple with format (<selector_type>, <selector_value>, [<display_nane>])
-        a css selector string
-        an XPath selector string
-        """
-        webelement = None
-
         selector_type = None
         selector_value = None
         element_name = None
 
-        if timeout is None:
-            timeout = execution.settings['search_timeout']
-
-        if wait_displayed is None:
-            wait_displayed = execution.settings['wait_displayed']
-
-        if highlight is None:
-            highlight = execution.settings['highlight_elements']
-
-        if isinstance(element, RemoteWebElement) or isinstance(element, ExtendedWebElement):
-            webelement = element
-        elif isinstance(element, tuple):
+        if isinstance(element, tuple):
             selector_type = element[0]
             selector_value = element[1]
             element_name = element[2] if len(element) == 3 else element[1]
@@ -141,8 +190,37 @@ class Finder:
             selector_value = element_name = tag_name
         else:
             raise IncorrectSelectorType('Selector is not a valid option')
+        return (selector_type, selector_value, element_name,)
+
+    def _find(
+        self, element=None, id=None, name=None, link_text=None, partial_link_text=None,
+        css=None, xpath=None, tag_name=None, timeout=None, wait_displayed=None, highlight=None
+    ):
+        """Find a webelement.
+
+        `element` can be:
+        a web element
+        a tuple with format (<selector_type>, <selector_value>, [<display_nane>])
+        a css selector string
+        an XPath selector string
+        """
+        if timeout is None:
+            timeout = execution.settings['search_timeout']
+
+        if wait_displayed is None:
+            wait_displayed = execution.settings['wait_displayed']
+
+        if highlight is None:
+            highlight = execution.settings['highlight_elements']
+
+        webelement = None
+        if isinstance(element, RemoteWebElement) or isinstance(element, ExtendedWebElement):
+            webelement = element
 
         if not webelement:
+            selector_type, selector_value, element_name = self._get_selector_data(
+                element, id, name, link_text, partial_link_text, css, xpath, tag_name
+            )
             webelement = self._find_webelement(
                 selector_type, selector_value, element_name, timeout, wait_displayed, highlight
             )
@@ -168,71 +246,10 @@ class Finder:
         a css selector string
         an XPath selector string
         """
-        webelements = []
-        tuple_element_name = None
-        if isinstance(element, tuple):
-            selector_type = element[0]
-            selector_value = element[1]
-            tuple_element_name = element[2] if len(element) >= 3 else element[1]
-            if selector_type == 'id':
-                id = selector_value
-            elif selector_type == 'css':
-                css = selector_value
-            elif selector_type == 'link_text':
-                link_text = selector_value
-            elif selector_type == 'partial_link_text':
-                partial_link_text = selector_value
-            elif selector_type == 'name':
-                name = selector_value
-            elif selector_type == 'xpath':
-                xpath = selector_value
-            elif selector_type == 'tag_name':
-                tag_name = selector_value
-            else:
-                raise Exception(f'Incorrect element {element}')
-        elif isinstance(element, str):
-            if self._str_is_xpath_selector(element):
-                xpath = element
-            else:
-                css = element
-
-        if id:
-            selector_type = 'id'
-            selector_value = id
-            element_name = tuple_element_name or id
-            webelements = self.find_elements(By.ID, id)
-        elif css:
-            selector_type = 'css'
-            selector_value = css
-            element_name = tuple_element_name or css
-            webelements = self.find_elements(By.CSS_SELECTOR, css)
-        elif link_text:
-            selector_type = 'link_text'
-            selector_value = link_text
-            element_name = tuple_element_name or link_text
-            webelements = self.find_elements(By.LINK_TEXT, link_text)
-        elif partial_link_text:
-            selector_type = 'partial_link_text'
-            selector_value = partial_link_text
-            element_name = tuple_element_name or partial_link_text
-            webelements = self.find_elements(By.PARTIAL_LINK_TEXT, partial_link_text)
-        elif name:
-            selector_type = 'name'
-            selector_value = name
-            element_name = tuple_element_name or name
-            webelements = self.find_elements(By.NAME, name)
-        elif xpath:
-            selector_type = 'xpath'
-            selector_value = xpath
-            element_name = tuple_element_name or xpath
-            webelements = self.find_elements(By.XPATH, xpath)
-        elif tag_name:
-            selector_type = 'tag_name'
-            selector_value = element_name = tag_name
-            element_name = tuple_element_name or tag_name
-            webelements = self.find_elements(By.TAG_NAME, tag_name)
-        else:
-            raise IncorrectSelectorType('Incorrect selector provided')
+        selector_type, selector_value, element_name = self._get_selector_data(
+            element, id, name, link_text, partial_link_text, css, xpath, tag_name
+        )
+        webelements = self._get_element(selector_type, selector_value, many=True)
 
         extended_webelements = []
         for elem in webelements:
@@ -273,62 +290,6 @@ class ExtendedWebElement(Finder):
         """Double click the element"""
         action_chains = ActionChains(self.parent)
         action_chains.double_click(self).perform()
-
-    def find(self, element=None, id=None, name=None, link_text=None,
-             partial_link_text=None, css=None, xpath=None, tag_name=None,
-             timeout=None, wait_displayed=None, highlight=None) -> 'ExtendedRemoteWebElement':
-        """Find a WebElement
-
-        Search criteria:
-        The first argument must be: an element tuple, a CSS string,
-        an XPath string, or a WebElement object.
-        Keyword search criteria: id, name, link_text, partial_link_text,
-        css, xpath, tag_name.
-        Only one search criteria should be provided.
-
-        Other args:
-        - timeout: timeout (in seconds) to wait for element to be present.
-                   by default it uses the *search_timeout* setting value
-        - wait_displayed: wait for element to be displayed (visible).
-                          by default uses the *wait_displayed* setting value
-
-        :Usage:
-            element.find('div#someId > input.class')
-            element.find(('id', 'someId'))
-            element.find(id='someId')
-            element.find(xpath='//div/input', timeout=5, wait_displayed=True)
-
-        :Returns:
-          a golem.webdriver.extended_webelement.ExtendedRemoteWebElement
-        """
-        return self._find(
-            element, id, name, link_text, partial_link_text,
-            css, xpath, tag_name, timeout, wait_displayed, highlight
-        )
-
-    def find_all(self, element=None, id=None, name=None, link_text=None,
-                 partial_link_text=None, css=None, xpath=None,
-                 tag_name=None) -> List['ExtendedRemoteWebElement']:
-        """Find all WebElements that match the search criteria.
-
-        Search criteria:
-        The first argument must be: an element tuple, a CSS string, or
-        an XPath string.
-        Keyword search criteria: id, name, link_text, partial_link_text,
-        css, xpath, tag_name.
-        Only one search criteria should be provided.
-
-        :Usage:
-            element.find_all('div#someId > span.class')
-            element.find(('tag_name', 'input'))
-            element.find(xpath='//div/input')
-
-        :Returns:
-            a list of ExtendedRemoteWebElement
-        """
-        return self._find_all(
-            element, id, name, link_text, partial_link_text, css, xpath, tag_name
-        )
 
     def focus(self):
         """Give focus to element"""
